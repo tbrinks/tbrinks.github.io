@@ -27,7 +27,7 @@ knitr::opts_chunk$set(cache=TRUE)
 
 # Introduction
 
-### About The Topic 
+### About the Topic 
 
 <font size="3">
 
@@ -39,7 +39,7 @@ This tutorial is going to use Dota 2 to walk you through the data science pipeli
 
 
 
-Dota is considered a [Esport game](https://en.wikipedia.org/wiki/Esports). This tutorial is going to use the data from [professional teams (click for the current list)](https://liquipedia.net/dota2/Portal:Teams)
+Dota is considered an [Esport game](https://en.wikipedia.org/wiki/Esports). This tutorial is going to use the data from [professional teams (click for the current list)](https://liquipedia.net/dota2/Portal:Teams)
 
 </font> 
 
@@ -72,9 +72,9 @@ I will be using **R** in this tutorial. Another option would be **Python**.
 # The Goal
 
 <font size="3">
-Before getting into the action of using your data science toolkit, you need to establish a goal that their trying to accomplish. What's the problem at hand? What are you trying to solve? Figure out? Analyze?
+Before getting into the action of using your data science toolkit, you need to establish a goal that you're trying to accomplish. What's the problem at hand? What are you trying to solve? Figure out? Analyze?
 
-We are going to analyze the performances of some of the top teams and hero performances with relation to the patches that change the game.
+We are going to analyze the performances of some of the top teams and hero performances (played by the professionals ) with relation to the patches that change the game.
 </font> 
 
 # Data Wrangling
@@ -101,7 +101,7 @@ For this tutorial, I will be using [DatDota](https://www.datdota.com/) to acquir
 
 <font size="3">
 
-We could have scrapped the data or used API's available to us, but all the information we need can be easily obtained from DatDota. I went ahead and downloaded the files and they will be accessible on my github page, or from DatDota <font size="1"> (<i>Note:</i> I used patch intervals of 6 when querying the data from DatDota. </font>
+We could have scrapped the data or used API's available to us, but all the information we need can be easily obtained from DatDota. I went ahead and downloaded the files and they will be accessible on my GitHub page, or from DatDota <font size="1"> (<i>Note:</i> I used patch intervals of 6 when querying the data from DatDota. </font>
 
 * [Team Performances](https://www.datdota.com/teams/performances?default=true)
 * [Hero Performances](https://www.datdota.com/teams/performances?default=true)
@@ -115,7 +115,7 @@ We could have scrapped the data or used API's available to us, but all the infor
 
 We will now set up our environment  to read and access the data from the files, allowing us to perform any needed operations from our data science toolkit.
 
-I will be using the r library, readxl, to be able to read and convert excel files into data frames. dataframe is our data structure (two dimensional) of rows and columns we will use to store, read, and organize data. Our dataframes will be known as tidy data.
+I will be using the r library, readxl, to be able to read and convert excel files into data frames. data frame is our data structure (two dimensional) of rows and columns we will use to store, read, and organize data. Our data frames will be known as tidy data.
 
 <center>
 ![](C:/Users/tyler/Desktop/github-page/tbrinks.github.io/images/tidy.png)
@@ -318,25 +318,6 @@ labs(title = "Popular Hero Picks & Winrate (Professionals)", y= "Winrate", x= "H
 The above graphs are nothing special, but the following graph is going to plot a correlation between a hero's pick rate and win rate. The results we get appear to show that there is no real strong evidence between the two.
 
 
-```{r graph_3, message=FALSE, warning=FALSE}
-library(ggplot2)
-library(tidyverse)
-library(magrittr)
-library(ggrepel)
-
-ggplot(total_hero %>%  top_n(15,Total_Games_Picked)  %>%
-  group_by(Hero, Winrate),
-  aes(x=Total_Games_Picked, y = Winrate, color=Hero)) +
-  geom_point() +
-  geom_label_repel(aes(label = Hero), point.padding = .4, box.padding = 0.2, size = 2.5) +
-  scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  +
-labs(title = "Pickrate and Winrate Correlation", y= "Winrate", x= "Pick Rate")
-```
-
-
-
-
-
 
 ```{r graph_5, message=FALSE, warning=FALSE}
 
@@ -368,6 +349,25 @@ ggarrange(df1,df2,df3,df4,df5)
 ```
 
 
+Let's continue analyzing the data, but this time, will we use regression models to look at the relationships between multiple variables. First, we will look at the relationship between Hero pick rate and their win rate. Further, we can also use facet_grids to show the relationship change over the interval of patches that change the game.
+
+
+```{r graph_3, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(tidyverse)
+library(magrittr)
+library(ggrepel)
+
+ggplot(total_hero %>%  top_n(15,Total_Games_Picked)  %>%
+  group_by(Hero, Winrate),
+  aes(x=Total_Games_Picked, y = Winrate)) +
+  geom_point() +
+  geom_smooth(method=lm) +
+  geom_label_repel(aes(label = Hero), point.padding = .4, box.padding = 0.2, size = 2.5) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  +
+labs(title = "Pickrate and Winrate Correlation", y= "Winrate", x= "Pick Rate")
+```
+
 ```{r graph_6, message=FALSE, warning=FALSE}
 
 ## Create a function to handle the same graph code for each patch set
@@ -377,10 +377,11 @@ GetGraph <- function(team, id) {
   p2 <- paste(p1, " - Pickrate and Winrate Correlation", sep = " ")
   
   graph <-
-    ggplot(team%>%  top_n(15,Total_Games_Picked) %>%
+    ggplot(team%>%  top_n(50,Total_Games_Picked) %>%
      group_by(Hero, Winrate),
-  aes(x=Total_Games_Picked, y = Winrate, color=Hero)) +
-  geom_point() +
+  aes(x=Total_Games_Picked, y = Winrate)) +
+  geom_point() + 
+  geom_smooth(method=lm) +
   geom_label_repel(aes(label = Hero), point.padding = .4, box.padding = 0.2, size = 2.5) +
   scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  +
 labs(title = p2, y= "Winrate", x= "Pick Rate")
@@ -404,15 +405,17 @@ df5
 
 ```
 
-There appears to be some variation between patches, but there does seem to be a slight lead in winrates for heroes who aren't picked that often.
+There appears to be some variation between patches, but there does seem to be a slight lead in winrates for heroes who aren't picked that often. As the pick rate increases, their win rate appears to get closer to 50%. Heros that aren't picked often may have been picked for special situations, for specific advantages, so this does make sense.
 
 ----
 
-Lets look at something different: The goal of the game is to destroy the opponents main building, so heroes who do the most tower damage should be expected to have a higher win rate.
+Let's look at something different but still apply some regression techniques: 
 
-Hero's who "kill" their opponents during the game also gain the advantage of them having to wait to respawn. This gives them a strategic advantage  of being able to maximize this time to gain advantages (destroy buildings, gain gold, etc).
+(1 The goal of the game is to destroy the opponents main building, so heroes who do the most tower damage should be expected to have a higher win rate due to more buildings being destroyed.
 
-Let's graph this.
+(2) Heros who "kill" their opponents during the game also gain the advantage of them having to wait to respawn. This gives them a strategic advantage  of being able to maximize this time to gain a lead in multiple ways (destroy buildings, gain gold, etc). We can do this by looking at hero kills amount, and/or hero total damage.
+
+There are many other areas we could explore such as hero levels and winrate correlation, and we can also start applying match time being a factor into all of these. I suggest you try these for yourself!
 
 
 
@@ -427,8 +430,9 @@ GetGraph <- function(team, id) {
   graph <-
     ggplot(team%>%  top_n(15,Tower_Damage) %>%
      group_by(Hero, Winrate),
-  aes(x=Tower_Damage, y = Winrate, color=Hero)) +
-  geom_point() +
+  aes(x=Tower_Damage, y = Winrate)) +
+  geom_point() + 
+  geom_smooth(method=lm) +
   geom_label_repel(aes(label = Hero), point.padding = .4, box.padding = 0.2, size = 2.5) +
   scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  +
 labs(title = p2, y= "Winrate", x= "Tower Damage")
@@ -463,8 +467,9 @@ GetGraph <- function(team, id) {
   graph <-
     ggplot(team%>%  top_n(15,Hero_Damage) %>%
      group_by(Hero, Winrate),
-  aes(x=Tower_Damage, y = Winrate, color=Hero)) +
-  geom_point() +
+  aes(x=Tower_Damage, y = Winrate)) +
+  geom_point() + 
+  geom_smooth(method=lm) +
   geom_label_repel(aes(label = Hero), point.padding = .4, box.padding = 0.2, size = 2.5) +
   scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  +
 labs(title = p2, y= "Winrate", x= "Hero Damage")
@@ -489,6 +494,43 @@ df5
 ```
 
 
+```{r graph_9, message=FALSE, warning=FALSE}
+
+## Create a function to handle the same graph code for each patch set
+### uses paste function to concatenate the title names based on the patch number
+GetGraph <- function(team, id) {
+  p1 <- paste("Patch", id, sep = " ")
+  p2 <- paste(p1, " - Hero Damage and Winrate Correlation", sep = " ")
+  
+  graph <-
+    ggplot(team,aes(x = Kills, y = Gold_Per_Minute ,color=Winrate))+
+  geom_point()+
+  geom_smooth(method=lm)+
+  labs(title = "Winrate of Hero kills and GPM",
+       x = "Hero Kills",
+       y = "Gold_Per_Minute")
+  
+  return(graph)
+}
+
+# Bind the graph results
+df1 <- GetGraph(hero_patchset_1, "1")
+df2 <- GetGraph(hero_patchset_2, "2")
+df3 <- GetGraph(hero_patchset_3,"3")
+df4 <- GetGraph(hero_patchset_4,"4")
+df5 <-GetGraph(hero_patchset_5,"5")
+
+# I dropped patches 1,4 to conserve space.
+# they had the least number of games played before the next patch.
+df3
+df2
+df3
+df5
+
+```
+
+A hero who kills their opponent gains gold, so it makes sense to see an increase of gold per minute for the number of kills to increase. This doesn't always mean the game is in the bag though, because the other team can still easily come back with the "come back" mechanics of the game. The team compositions also can have different performance peaks during the match, so this can allow teams to take over at different points of the game. This isn't guarenteed though.
+
 </font> 
 
 
@@ -503,3 +545,5 @@ TBD *:[*
 
 </font> 
 
+
+# Conclusions
