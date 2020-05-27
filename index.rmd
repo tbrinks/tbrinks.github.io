@@ -1,0 +1,505 @@
+---
+title: "Dota 2 Analysis"
+author: Tyler Brinkley
+date: CMSC320
+output:
+  prettydoc::html_pretty:
+    theme: hpstr
+    highlight: github
+    toc: yes
+---
+
+```{r knitr_setup, echo=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+
+------
+
+
+<center>
+![](C:/Users/tyler/Desktop/github-page/tbrinks.github.io/images/image.png)
+</center>
+
+
+------
+
+
+# Introduction
+
+### About The Topic 
+
+<font size="3">
+
+This tutorial is going to use Dota 2 to walk you through the data science pipeline. The topic Dota 2 has been chosen primarily because it's an interest of mine and the data involved should have some interesting results
+
+</font> 
+
+**What is Dota 2?** <font size="3">  Dota is developed by Valve Corporation and can be defined as a competitive real time strategy  game. The basic idea is that there are two teams of five, each person can choose from a pool of 119 characters, and the goal is to destroy the opponents  main building. There are <u> numerous </u> more factors involved, and I [recommend to check out this wiki for more information](https://dota2.gamepedia.com/Dota_2). It can be thought as a chess game where each piece on the board is unique and the permutation  of the possible board composition is countless, so every game is likely to always be different.
+
+
+
+Dota is considered a [Esport game](https://en.wikipedia.org/wiki/Esports). This tutorial is going to use the data from [professional teams (click for the current list)](https://liquipedia.net/dota2/Portal:Teams)
+
+</font> 
+
+### Data Science!
+
+
+<center>
+![](C:/Users/tyler/Desktop/github-page/tbrinks.github.io/images/zumel_mount_cycle.png)
+</center>
+
+<font size="3">
+
+The areas this tutorial  intends to cover: 
+
+1. Data Collection 
+2. Data Processing and Data Management
+3. Exploratory Analysis and Visualization  
+4. Hypothesis Testing and Machine Learning 
+5. Insights Gained
+
+
+I will be using **R** in this tutorial. Another option would be **Python**.
+
+</font> 
+
+------
+
+
+
+# The Goal
+
+<font size="3">
+Before getting into the action of using your data science toolkit, you need to establish a goal that their trying to accomplish. What's the problem at hand? What are you trying to solve? Figure out? Analyze?
+
+We are going to analyze the performances of some of the top teams and hero performances with relation to the patches that change the game.
+</font> 
+
+# Data Wrangling
+
+<font size="3">
+In order for us to do any sort of problem solving and data analyzing, we must acquire that data first! There are a few ways we can go about this. Some examples:
+
+* Data Scrapping
+  + <font size="2"> e.g From websites [(Rvest is a useful tool for this)](https://www.rdocumentation.org/packages/rvest/versions/0.3.5) </font>
+
+* Third party Resources
+  + <font size="2"> Options: [(1) liquidpedia's](https://liquipedia.net/dota2/Main_Page), [(2) Kaggle](https://www.kaggle.com/jsaguiar/dataset-update-with-opendota-api/data ), [(3) DatDota](https://www.datdota.com/), [(4) OpenDota](https://www.opendota.com/), [(5) DotaBuff](https://www.dotabuff.com/), (6) API's</font>
+* Run and administer  our own experiments, trials, interviews, etc.
+  +  <font size="2"> Not really appropriate here </font>
+
+The last option isn't that feasible for this situation Data scrapping using an API is possible to do here but with the amount of data we want, the task would be fairly big for this tutorial. Since the data we want to use in this tutorial is already avaiable to use, we will go with this option.
+
+For this tutorial, I will be using [DatDota](https://www.datdota.com/) to acquire files to import into the [Rstudio](https://rstudio.com/) project.
+
+</font> 
+
+
+### Gathering The Data
+
+<font size="3">
+
+We could have scrapped the data or used API's available to us, but all the information we need can be easily obtained from DatDota. I went ahead and downloaded the files and they will be accessible on my github page, or from DatDota <font size="1"> (<i>Note:</i> I used patch intervals of 6 when querying the data from DatDota. </font>
+
+* [Team Performances](https://www.datdota.com/teams/performances?default=true)
+* [Hero Performances](https://www.datdota.com/teams/performances?default=true)
+
+</font> 
+
+
+### Environment  Set up
+
+<font size="3">
+
+We will now set up our environment  to read and access the data from the files, allowing us to perform any needed operations from our data science toolkit.
+
+I will be using the r library, readxl, to be able to read and convert excel files into data frames. dataframe is our data structure (two dimensional) of rows and columns we will use to store, read, and organize data. Our dataframes will be known as tidy data.
+
+<center>
+![](C:/Users/tyler/Desktop/github-page/tbrinks.github.io/images/tidy.png)
+</center>
+
+
+
+I will also be using the r library, kable, to display the data frames into nicely styled tables.
+
+```{r project_setup, message=FALSE, warning=FALSE}
+# We use the library readxl to read excel files
+library("readxl")
+library("kableExtra")
+library(tidyverse)
+# Reading the excel files and making a data frame
+
+
+### x_y indicates the patch range of the data file (x to y)
+## HEROES
+total_hero <- read_excel("heroes/hero_performances_7.0+.xltx")
+hero_7.0_7.5 <- read_excel("heroes/hero_performances_7.0-7.5.xltx")
+hero_7.5_7.10  <- read_excel("heroes/hero_performances_7.5-7.10.xltx")
+hero_7.10_7.15 <- read_excel("heroes/hero_performances_7.10-7.15.xltx")
+hero_7.15_7.20 <- read_excel("heroes/hero_performances_7.15-7.20.xltx")
+hero_7.20_7.25 <- read_excel("heroes/hero_performances_7.20-7.25.xltx")
+
+## TEAMS
+total_teams <- read_csv("teams/team_performances_7.0+.csv")
+teams_7.0_7.5 <- read_csv("teams/team_performances_7.0-7.5.csv")
+teams_7.5_7.10  <- read_csv("teams/team_performances_7.5-7.10.csv")
+teams_7.10_7.15 <- read_csv("teams/team_performances_7.10-7.15.csv")
+teams_7.15_7.20 <- read_csv("teams/team_performances_7.15-7.20.csv")
+teams_7.20_7.25 <- read_csv("teams/team_performances_7.20-7.25.csv")
+
+
+```
+
+
+Displaying a table of the hero stats played by professional. During the patch range: 7.00 to 7.25.
+
+```{r display_table1, message=FALSE, warning=FALSE}
+
+## %>% is a pipe and will help with code interpretability 
+## It will pass the 'current step' on the LHS to the first argument on the RHS.
+
+
+## Repeating the below, but for teams. I will exclude this for now.
+#total_teams %>%
+#  kable() %>%
+#    kable_styling() %>%
+#      scroll_box(box_css  = "background = black;", width = "100%", height ="500px",
+#                 fixed_thead  = list(enabled = TRUE, background = "lightpurple"))
+
+# Get our dataframe
+total_hero %>%
+  # pass it into kable, which will output a stylized table.
+  kable() %>%
+    kable_styling() %>%
+      #Scrollable box for maneuverability of the table and other styling
+      scroll_box(box_css  = "background = black;", width = "100%", height ="500px",
+                 fixed_thead  = list(enabled = TRUE, background = "lightpurple"))
+
+```
+
+In this case, our data model is CSV which has a tabular data format.
+
+</font> 
+
+
+### Tidying and Cleaning
+
+<font size="3">
+
+Although the imported data is good, I still believe there could be some corrections and adjustments. For instance, some of the column names are not clearly defined, so first time readers won't understand them (I'm assuming you know some of the details of the game still). There are some columns that aren't going to be needed, so we can drop them. The time column imported from excel needs to be displayed correctly. Lastly, I only care about some of the professional teams, so I will be picking a few rows from the many available. 
+
+<b>Note: </b> The values of the variables for each observation are averages for the number of games they played.
+
+
+
+```{r clean_data, message=FALSE, warning=FALSE}
+library(data.table)
+
+###################
+###Team Portion####
+###################
+
+## We are going to define a few functions to carry out what we want
+## due to having multiple data files.
+
+## Removing unwanted colomns
+RemoveCol <- function(team) {
+    team <- subset(team, select = -c(2)) %>% subset(select = -c(Shift,Overall))
+    return(team)
+}
+# Rename Columns
+RenameCols <- function(x) {
+    setnames(x, c("Team","Games Played","Wins", "Losses", "Winrate","Radiant Sided Games", "Dire Sided Games",
+                  "Kills"," Deaths", "Assists", "Gold Per Minute", "Experience Per Minute", "Creep Last Hits", 
+                  "Denies", "Won Match Avg Time", "Lost Match Avg Time"))
+    return(x)
+}
+
+## Select teams
+SelectTeams <- function(teams) {
+    teams <- subset(teams, Team == "Team Secret" | Team == "Evil Geniuses" | Team == "Alliance" |
+                      Team == "Newbee" | Team == "Fnatic" | Team == "OG" | Team == "Vici Gaming" | 
+                    Team == "Team Liquid"| Team == "virtus.pro"| Team == "LGD.Forever Young" |
+                      Team == "INVICTUS GAMING" | Team == "compLexity Gaming" | Team == "compLexity Gaming" |
+                      Team == "Natus Vincer" | Team == "OpTic Gaming" | Team == "PSG.LGD" |
+                      Team == "TNC Predator")
+}
+
+##  Apply and Save our changes
+total_teams <- total_teams %>% RemoveCol() %>% RenameCols() %>% SelectTeams()
+teams_patchset_1 <-  teams_7.5_7.10 %>% RemoveCol() %>% RenameCols() %>% SelectTeams()
+teams_patchset_2  <-  teams_7.5_7.10 %>% RemoveCol() %>% RenameCols() %>% SelectTeams()
+teams_patchset_3 <-  teams_7.10_7.15 %>% RemoveCol() %>% RenameCols() %>% SelectTeams()
+teams_patchset_4 <-  teams_7.15_7.20 %>% RemoveCol() %>% RenameCols() %>% SelectTeams()
+teams_patchset_5 <-  teams_7.20_7.25 %>% RemoveCol() %>% RenameCols() %>% SelectTeams()
+
+###################
+### Hero Portion###
+###################
+
+RenameCols <- function(x) {
+    setnames(x, c("Hero","Total_Games_Picked","Wins", "Losses", "Winrate","Radiant_Sided Games", 
+                  "Dire_Sided_Games", "Kills"," Deaths", "Assists", "Kill_Death Assist_Ratio ", 
+                  "Assits_Per_Life", "Gold_Per_Minute", "Experience_Per_Minute",  "Last_Hits", "Denies",
+                  "Level", "Hero_Damage", "Tower_Damage", "Hero_Healing", "Gold_Spent"))
+    return(x)
+}
+
+total_hero <- total_hero %>% RenameCols()
+hero_patchset_1 <- hero_7.0_7.5 %>% RenameCols() 
+hero_patchset_2  <- hero_7.5_7.10 %>% RenameCols() 
+hero_patchset_3 <- hero_7.10_7.15 %>% RenameCols()
+hero_patchset_4 <- hero_7.15_7.20  %>% RenameCols() 
+hero_patchset_5 <- hero_7.20_7.25 %>% RenameCols()
+```
+
+```{r Display3, message=FALSE, warning=FALSE}
+total_teams %>%
+  kable() %>%
+    kable_styling() %>%
+      scroll_box(box_css  = "background = black;", width = "100%", height ="500px",
+                fixed_thead  = list(enabled = TRUE, background = "lightpurple"))
+
+# Get our dataframe
+total_hero %>%
+  # pass it into kable, which will output a stylized table.
+  kable() %>%
+    kable_styling() %>%
+      #Scrollable box for maneuverability of the table and other styling
+      scroll_box(box_css  = "background = black;", width = "100%", height ="500px",
+                 fixed_thead  = list(enabled = TRUE, background = "lightpurple"))
+```
+
+</font> 
+
+
+# Exploratory Data Analysis
+
+<font size="2">
+
+<i><b>I bit off more than I could chew for this project under my circumstances. I originally  had many ideas and wanted to do a deeper analysis between heroes and teams. However, from this point forward, I will be focusing on the hero data set.</b>I will likely come back and finish my original  plans. </i> 
+
+</font>
+
+<font size="3">
+
+I suspect that the most commonly picked heroes are going to have a higher winrate. Professional teams are more likely to pick a hero more often than other heroes if it's going to grant them a higher success rate. However, this may not always be the case, due to the countless permutations  of team compositions possible. These compositions should have an impact, because the opposite team may pick a hero **just to** counter the opposition where they normally wouldn't have. That hero could be a very particular pick where it is not played often, has a special set of 'tools', etc but fits extremely well in specific scenarios.
+
+I also want to look at the pick rate and win rate of these heroes over patch intervals to see the patch impacts. Lastly, I think it would be interesting to see the high winrate heroes and how much gold, levels, and damage they have or do.
+
+Lets start with some graphing and begin the hypothesis test!
+
+We will begin using the combined information from the patch range 7.0 to 7.25. Then we can compare the overall data to the individual patches to find anything interesting.
+
+```{r graph_1, message=FALSE, warning=FALSE}
+library(dplyr)
+# then we will choose the top 15 most picked heroes for the patch range
+total_hero %>%  top_n(15,Total_Games_Picked)  %>%
+# Just setting up the bar Graph, reorder allows to sort how the data is displayed
+ggplot(aes(x=reorder(Hero,-Total_Games_Picked) , y = Total_Games_Picked)) +
+geom_bar(stat="identity")  + theme_classic() +
+theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+labs(title = "Popular Hero Picks (Professionals)", y= "Amount Picked", x= "Hero")
+```
+
+```{r graph_2, message=FALSE, warning=FALSE}
+library(dplyr)
+total_hero %>%  top_n(15,Total_Games_Picked)  %>%
+# Just setting up the bar Graph, reorder allows to sort how the data is displayed
+ggplot(aes(x=reorder(Hero,-Winrate) , y = Winrate)) +
+geom_point()  + 
+theme(axis.text.x = element_text(angle = 90, hjust = 1)) +  scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+labs(title = "Popular Hero Picks & Winrate (Professionals)", y= "Winrate", x= "Hero")
+```
+
+The above graphs are nothing special, but the following graph is going to plot a correlation between a hero's pick rate and win rate. The results we get appear to show that there is no real strong evidence between the two.
+
+
+```{r graph_3, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(tidyverse)
+library(magrittr)
+library(ggrepel)
+
+ggplot(total_hero %>%  top_n(15,Total_Games_Picked)  %>%
+  group_by(Hero, Winrate),
+  aes(x=Total_Games_Picked, y = Winrate, color=Hero)) +
+  geom_point() +
+  geom_label_repel(aes(label = Hero), point.padding = .4, box.padding = 0.2, size = 2.5) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  +
+labs(title = "Pickrate and Winrate Correlation", y= "Winrate", x= "Pick Rate")
+```
+
+
+
+
+
+
+```{r graph_5, message=FALSE, warning=FALSE}
+
+## Create a function to handle the same graph code for each patch set
+### uses paste function to concatenate the title names based on the patch number
+GetGraph <- function(team, id) {
+  p1 <- paste("Patch", id, sep = " ")
+  p2 <- paste(p1, " - Top Heros Winrate", sep = " ")
+  
+  graph <- team%>%  top_n(15,Total_Games_Picked) %>%
+    ggplot(aes(x=reorder(Hero,-Winrate) , y = Winrate)) +
+    geom_point()   + theme_classic() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+    labs(title = p2, y= "Winrate", x= "Hero")
+  
+  return(graph)
+}
+
+# Bind the graph results
+df1 <- GetGraph(hero_patchset_1, "1")
+df2 <- GetGraph(hero_patchset_2, "2")
+df3 <- GetGraph(hero_patchset_3,"3")
+df4 <- GetGraph(hero_patchset_4,"4")
+df5 <-GetGraph(hero_patchset_5,"5")
+
+# we use ggpubr to arrange the graphs together
+ggarrange(df1,df2,df3,df4,df5)
+
+```
+
+
+```{r graph_6, message=FALSE, warning=FALSE}
+
+## Create a function to handle the same graph code for each patch set
+### uses paste function to concatenate the title names based on the patch number
+GetGraph <- function(team, id) {
+  p1 <- paste("Patch", id, sep = " ")
+  p2 <- paste(p1, " - Pickrate and Winrate Correlation", sep = " ")
+  
+  graph <-
+    ggplot(team%>%  top_n(15,Total_Games_Picked) %>%
+     group_by(Hero, Winrate),
+  aes(x=Total_Games_Picked, y = Winrate, color=Hero)) +
+  geom_point() +
+  geom_label_repel(aes(label = Hero), point.padding = .4, box.padding = 0.2, size = 2.5) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  +
+labs(title = p2, y= "Winrate", x= "Pick Rate")
+  
+  return(graph)
+}
+
+# Bind the graph results
+df1 <- GetGraph(hero_patchset_1, "1")
+df2 <- GetGraph(hero_patchset_2, "2")
+df3 <- GetGraph(hero_patchset_3,"3")
+df4 <- GetGraph(hero_patchset_4,"4")
+df5 <-GetGraph(hero_patchset_5,"5")
+
+# I dropped patches 1,4 to conserve space.
+# they had the least number of games played before the next patch.
+df3
+df2
+df3
+df5
+
+```
+
+There appears to be some variation between patches, but there does seem to be a slight lead in winrates for heroes who aren't picked that often.
+
+----
+
+Lets look at something different: The goal of the game is to destroy the opponents main building, so heroes who do the most tower damage should be expected to have a higher win rate.
+
+Hero's who "kill" their opponents during the game also gain the advantage of them having to wait to respawn. This gives them a strategic advantage  of being able to maximize this time to gain advantages (destroy buildings, gain gold, etc).
+
+Let's graph this.
+
+
+
+```{r graph_7, message=FALSE, warning=FALSE}
+
+## Create a function to handle the same graph code for each patch set
+### uses paste function to concatenate the title names based on the patch number
+GetGraph <- function(team, id) {
+  p1 <- paste("Patch", id, sep = " ")
+  p2 <- paste(p1, " - Tower Damage and Winrate Correlation", sep = " ")
+  
+  graph <-
+    ggplot(team%>%  top_n(15,Tower_Damage) %>%
+     group_by(Hero, Winrate),
+  aes(x=Tower_Damage, y = Winrate, color=Hero)) +
+  geom_point() +
+  geom_label_repel(aes(label = Hero), point.padding = .4, box.padding = 0.2, size = 2.5) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  +
+labs(title = p2, y= "Winrate", x= "Tower Damage")
+  
+  return(graph)
+}
+
+# Bind the graph results
+df1 <- GetGraph(hero_patchset_1, "1")
+df2 <- GetGraph(hero_patchset_2, "2")
+df3 <- GetGraph(hero_patchset_3,"3")
+df4 <- GetGraph(hero_patchset_4,"4")
+df5 <-GetGraph(hero_patchset_5,"5")
+
+# I dropped patches 1,4 to conserve space.
+# they had the least number of games played before the next patch.
+df3
+df2
+df3
+df5
+
+```
+
+```{r graph_8, message=FALSE, warning=FALSE}
+
+## Create a function to handle the same graph code for each patch set
+### uses paste function to concatenate the title names based on the patch number
+GetGraph <- function(team, id) {
+  p1 <- paste("Patch", id, sep = " ")
+  p2 <- paste(p1, " - Hero Damage and Winrate Correlation", sep = " ")
+  
+  graph <-
+    ggplot(team%>%  top_n(15,Hero_Damage) %>%
+     group_by(Hero, Winrate),
+  aes(x=Tower_Damage, y = Winrate, color=Hero)) +
+  geom_point() +
+  geom_label_repel(aes(label = Hero), point.padding = .4, box.padding = 0.2, size = 2.5) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10))  +
+labs(title = p2, y= "Winrate", x= "Hero Damage")
+  
+  return(graph)
+}
+
+# Bind the graph results
+df1 <- GetGraph(hero_patchset_1, "1")
+df2 <- GetGraph(hero_patchset_2, "2")
+df3 <- GetGraph(hero_patchset_3,"3")
+df4 <- GetGraph(hero_patchset_4,"4")
+df5 <-GetGraph(hero_patchset_5,"5")
+
+# I dropped patches 1,4 to conserve space.
+# they had the least number of games played before the next patch.
+df3
+df2
+df3
+df5
+
+```
+
+
+</font> 
+
+
+<font size="2">*The Rest of the Content: TBD*</font>
+
+
+# Machine Learning
+
+
+<font size="2">
+TBD *:[*
+
+</font> 
+
